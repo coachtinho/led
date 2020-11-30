@@ -38,18 +38,18 @@ impl MagicHomeAPI {
     }
     
     // Converts string to RGB values
-    fn string_to_rgb(color: &str) -> Result<(u8, u8, u8), &'static str> {
+    fn string_to_rgb(color: &str) -> Result<Mode, &'static str> {
         match color {
-            "red" => Ok((255, 0, 0)),
-            "green" => Ok((0, 255, 0)),
-            "blue" => Ok((0, 0, 255)),
-            "lime" => Ok((255, 255, 0)),
-            "yellow" => Ok((255, 110, 0)),
-            "pink" => Ok((255, 0, 170)),
-            "cyan" => Ok((0, 255, 255)),
-            "purple" => Ok((170, 0, 255)),
-            "orange" => Ok((255, 24, 0)),
-            "white" => Ok((255, 255, 255)),
+            "red" => Ok(Mode::Color(255, 0, 0)),
+            "green" => Ok(Mode::Color(0, 255, 0)),
+            "blue" => Ok(Mode::Color(0, 0, 255)),
+            "lime" => Ok(Mode::Color(255, 255, 0)),
+            "yellow" => Ok(Mode::Color(255, 110, 0)),
+            "pink" => Ok(Mode::Color(255, 0, 170)),
+            "cyan" => Ok(Mode::Color(0, 255, 255)),
+            "purple" => Ok(Mode::Color(170, 0, 255)),
+            "orange" => Ok(Mode::Color(255, 24, 0)),
+            "white" => Ok(Mode::Color(255, 255, 255)),
             _ => Err("Invalid color"),
         }
     }
@@ -61,8 +61,7 @@ impl MagicHomeAPI {
             "ambient" => Mode::Function(37, 50),
             "rainbow" => Mode::Function(37, 1),
             _ => {
-                let (r, g, b) = MagicHomeAPI::string_to_rgb(mode)?;
-                Mode::Color(r, g, b)
+                MagicHomeAPI::string_to_rgb(mode)?
             },
         };
         self.send_to_device(mode);
@@ -133,14 +132,22 @@ mod tests {
 
     #[test]
     fn valid_string_to_rgb() {
-        let result = MagicHomeAPI::string_to_rgb("yellow");
-        assert_eq!(result, Ok((255, 110, 0)));
+        if let Ok(Mode::Color(r, g, b)) = MagicHomeAPI::string_to_rgb("yellow") {
+            assert_eq!(r, 255);
+            assert_eq!(g, 110);
+            assert_eq!(b, 0);
+        } else {
+            panic!("Returned Err");
+        }
     }
 
     #[test]
     fn invalid_string_to_rgb() {
-        let result = MagicHomeAPI::string_to_rgb("black");
-        assert_eq!(result, Err("Invalid color"));
+        if let Err(error) = MagicHomeAPI::string_to_rgb("black") {
+            assert_eq!(error, "Invalid color");
+        } else {
+            panic!("Did not return Err");
+        }
     }
 
     #[test]
