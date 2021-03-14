@@ -23,11 +23,11 @@ impl MagicHomeAPI {
 
     // Sets color of device according to RGB values
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
-        if r > 255 || r < 0 {
+        if !(0..=255).contains(&r) {
             Err("Invalid r value")
-        } else if g > 255 || g < 0 {
+        } else if !(0..=255).contains(&g) {
             Err("Invalid g value")
-        } else if b > 255 || b < 0 {
+        } else if !(0..=255).contains(&b) {
             Err("Invalid b value")
         } else {
             let mode = Mode::Color(r as u8, g as u8, b as u8);
@@ -79,14 +79,14 @@ impl MagicHomeAPI {
                 vec![0x61, preset, speed, 0x0f]
             },
         };
-        let checksum = MagicHomeAPI::calc_checksum(&message);
+        let checksum = MagicHomeAPI::calc_checksum(message.as_slice());
 
         message.push(checksum);
 
-        self.0.write(message.as_slice()).expect("Failed writing to socket");
+        self.0.write_all(message.as_slice()).expect("Failed writing to socket");
     }
 
-    fn calc_checksum(bytes: &Vec<u8>) -> u8 {
+    fn calc_checksum(bytes: &[u8]) -> u8 {
         let mut checksum = 0;
 
         for num in bytes.iter() {
@@ -97,11 +97,11 @@ impl MagicHomeAPI {
     }
 
     pub fn turn_on(&mut self) {
-        self.0.write(&[0x71, 0x23, 0x0f, 0xa3]).expect("Failed writing to socket");
+        self.0.write_all(&[0x71, 0x23, 0x0f, 0xa3]).expect("Failed writing to socket");
     }
 
     pub fn turn_off(&mut self) {
-        self.0.write(&[0x71, 0x24, 0x0f, 0xa4]).expect("Failed writing to socket");
+        self.0.write_all(&[0x71, 0x24, 0x0f, 0xa4]).expect("Failed writing to socket");
     }
 }
 
