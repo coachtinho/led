@@ -1,13 +1,6 @@
-use std::process;
+use clap::{app_from_crate, crate_authors, crate_description, crate_name, crate_version, Arg};
 use led::MagicHomeAPI;
-use clap::{
-    Arg,
-    crate_description,
-    crate_authors,
-    crate_version,
-    crate_name,
-    app_from_crate,
-};
+use std::process;
 
 const ACTIONS: &str = "Possible actions:
 on, off, chaos, rainbow, ambient,
@@ -16,24 +9,30 @@ lime, purple, pink, cyan, white";
 
 fn main() {
     let matches = app_from_crate!()
-                        .arg(Arg::with_name("address")
-                            .short("a")
-                            .long("address")
-                            .value_name("ADDRESS")
-                            .help("Address of controller")
-                            .takes_value(true)
-                            .required(true))
-                        .arg(Arg::with_name("ACTION")
-                            .help(ACTIONS)
-                            .required(true)
-                            .index(1))
-                        .arg(Arg::with_name("port")
-                            .short("p")
-                            .long("port")
-                            .value_name("PORT")
-                            .help("Port to access on controller (default: 5577)")
-                            .takes_value(true))
-                        .get_matches();
+        .arg(
+            Arg::with_name("address")
+                .short("a")
+                .long("address")
+                .value_name("ADDRESS")
+                .help("Address of controller")
+                .takes_value(true)
+                .required(true),
+        )
+        .arg(
+            Arg::with_name("ACTION")
+                .help(ACTIONS)
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("port")
+                .short("p")
+                .long("port")
+                .value_name("PORT")
+                .help("Port to access on controller (default: 5577)")
+                .takes_value(true),
+        )
+        .get_matches();
 
     let action = matches.value_of("ACTION").unwrap();
 
@@ -50,12 +49,13 @@ fn main() {
     match action {
         "on" => magic_api.turn_on(),
         "off" => magic_api.turn_off(),
-        _ => if let Err(err) = magic_api.set_mode(action) {
+        _ => {
+            if let Err(err) = magic_api.set_mode(action) {
                 eprintln!("Failed changing mode: {}", err);
                 process::exit(1);
             }
+        }
     }
 
     println!("Changed LEDs: {}", action);
 }
-

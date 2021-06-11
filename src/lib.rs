@@ -1,6 +1,6 @@
-use std::net::TcpStream;
-use std::io::prelude::*;
 use std::error::Error;
+use std::io::prelude::*;
+use std::net::TcpStream;
 
 pub struct MagicHomeAPI(TcpStream);
 
@@ -10,7 +10,6 @@ enum Mode {
 }
 
 impl MagicHomeAPI {
-
     // Creates api from device address
     // If no port is provided defaults to 5577
     pub fn new(address: &str, port: Option<&str>) -> Result<MagicHomeAPI, Box<dyn Error>> {
@@ -36,7 +35,7 @@ impl MagicHomeAPI {
             Ok(())
         }
     }
-    
+
     // Converts string to RGB values
     fn string_to_rgb(color: &str) -> Result<Mode, &'static str> {
         match color {
@@ -60,9 +59,7 @@ impl MagicHomeAPI {
             "chaos" => Mode::Function(49, 5),
             "ambient" => Mode::Function(37, 50),
             "rainbow" => Mode::Function(37, 1),
-            _ => {
-                MagicHomeAPI::string_to_rgb(mode)?
-            },
+            _ => MagicHomeAPI::string_to_rgb(mode)?,
         };
         self.send_to_device(mode);
 
@@ -77,13 +74,15 @@ impl MagicHomeAPI {
                 // by default so it mus be done manually
                 self.turn_on();
                 vec![0x61, preset, speed, 0x0f]
-            },
+            }
         };
         let checksum = MagicHomeAPI::calc_checksum(message.as_slice());
 
         message.push(checksum);
 
-        self.0.write_all(message.as_slice()).expect("Failed writing to socket");
+        self.0
+            .write_all(message.as_slice())
+            .expect("Failed writing to socket");
     }
 
     fn calc_checksum(bytes: &[u8]) -> u8 {
@@ -97,11 +96,15 @@ impl MagicHomeAPI {
     }
 
     pub fn turn_on(&mut self) {
-        self.0.write_all(&[0x71, 0x23, 0x0f, 0xa3]).expect("Failed writing to socket");
+        self.0
+            .write_all(&[0x71, 0x23, 0x0f, 0xa3])
+            .expect("Failed writing to socket");
     }
 
     pub fn turn_off(&mut self) {
-        self.0.write_all(&[0x71, 0x24, 0x0f, 0xa4]).expect("Failed writing to socket");
+        self.0
+            .write_all(&[0x71, 0x24, 0x0f, 0xa4])
+            .expect("Failed writing to socket");
     }
 }
 
@@ -189,7 +192,6 @@ mod tests {
         let result = api.set_mode("reed");
         assert_eq!(result, Err("Invalid color"));
     }
-    
 
     #[test]
     fn calculate_checksum() {
