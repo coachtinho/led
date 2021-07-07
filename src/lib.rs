@@ -10,8 +10,8 @@ enum Mode {
 }
 
 impl MagicHomeAPI {
-    // Creates api from device address
-    // If no port is provided defaults to 5577
+    /// Creates api from device address
+    /// If no port is provided defaults to 5577
     pub fn new(address: &str, port: Option<&str>) -> Result<MagicHomeAPI, Box<dyn Error>> {
         let port = port.unwrap_or("5577");
         let address = &format!("{}:{}", address, port);
@@ -20,7 +20,7 @@ impl MagicHomeAPI {
         Ok(MagicHomeAPI(stream))
     }
 
-    // Sets color of device according to RGB values
+    /// Sets color of device according to RGB values
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
         if !(0..=255).contains(&r) {
             Err("Invalid r value")
@@ -36,7 +36,7 @@ impl MagicHomeAPI {
         }
     }
 
-    // Converts string to RGB values
+    /// Converts string to RGB values
     fn string_to_rgb(color: &str) -> Result<Mode, &'static str> {
         match color {
             "red" => Ok(Mode::Color(255, 0, 0)),
@@ -53,7 +53,7 @@ impl MagicHomeAPI {
         }
     }
 
-    // Changes mode of device to one of the preset functions or colors
+    /// Changes mode of device to one of the preset functions or colors
     pub fn set_mode(&mut self, mode: &str) -> Result<(), &'static str> {
         let mode = match mode {
             "chaos" => Mode::Function(49, 5),
