@@ -1,5 +1,7 @@
+mod magic_home;
+
 use clap::{app_from_crate, crate_authors, crate_description, crate_name, crate_version, Arg};
-use led::MagicHomeAPI;
+use magic_home::MagicHomeAPI;
 use std::process;
 
 const ACTIONS: &str = "Possible actions:
