@@ -21,6 +21,7 @@ impl MagicHomeAPI {
     }
 
     /// Sets color of device according to RGB values
+    #[allow(dead_code)]
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
         if !(0..=255).contains(&r) {
             Err("Invalid r value")
