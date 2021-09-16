@@ -2,12 +2,44 @@ use std::error::Error;
 use std::io::prelude::*;
 use std::net::TcpStream;
 
-pub struct MagicHomeAPI(TcpStream);
-
 enum Mode {
     Color(u8, u8, u8),
     Function(u8, u8),
 }
+
+pub struct Status<'a> {
+    pub power: bool,
+    pub color: (u8, u8, u8),
+    pub mode: &'a str,
+    pub speed: Option<u8>,
+}
+
+impl From<&[u8; 14]> for Status<'_> {
+    fn from(buffer: &[u8; 14]) -> Self {
+        // Parse power
+        let power = buffer[2] == 35;
+
+        // Parse color
+        let color = (buffer[6], buffer[8], buffer[7]);
+
+        // Parse mode
+        let (mode, speed) = match buffer[3] {
+            97 => ("static", None),
+            49 => ("strobe", Some(100 - buffer[5])),
+            37 => ("cycle", Some(100 - buffer[5])),
+            _ => ("unknown", None),
+        };
+
+        Status {
+            power,
+            color,
+            mode,
+            speed,
+        }
+    }
+}
+
+pub struct MagicHomeAPI(TcpStream);
 
 impl MagicHomeAPI {
     /// Creates api from device address
@@ -106,6 +138,20 @@ impl MagicHomeAPI {
         self.0
             .write_all(&[0x71, 0x24, 0x0f, 0xa4])
             .expect("Failed writing to socket");
+    }
+
+    pub fn get_status(&mut self) -> Status {
+        let mut buffer: [u8; 14] = [0; 14];
+
+        self.0
+            .write_all(&[0x81, 0x8a, 0x8b, 0x96])
+            .expect("Failed writing to socket");
+
+        self.0
+            .read_exact(&mut buffer)
+            .expect("Failed reading from socket");
+
+        Status::from(&buffer)
     }
 }
 

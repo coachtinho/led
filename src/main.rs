@@ -1,13 +1,26 @@
 mod magic_home;
 
 use clap::{app_from_crate, crate_authors, crate_description, crate_name, crate_version, Arg};
-use magic_home::MagicHomeAPI;
+use magic_home::{MagicHomeAPI, Status};
 use std::process;
 
 const ACTIONS: &str = "Possible actions:
-on, off, chaos, rainbow, ambient,
+status, on, off, chaos, rainbow, ambient,
 red, green, blue, yellow, orange,
 lime, purple, pink, cyan, white";
+
+fn print_status(status: Status) {
+    if status.power {
+        println!("Power: on");
+    } else {
+        println!("Power: off");
+    }
+    println!("Color: {:?}", status.color);
+    println!("Mode: {}", status.mode);
+    if let Some(speed) = status.speed {
+        println!("Speed: {}", speed);
+    }
+}
 
 fn main() {
     let matches = app_from_crate!()
@@ -51,6 +64,10 @@ fn main() {
     match action {
         "on" => magic_api.turn_on(),
         "off" => magic_api.turn_off(),
+        "status" => {
+            let status = magic_api.get_status();
+            print_status(status);
+        }
         _ => {
             if let Err(err) = magic_api.set_mode(action) {
                 eprintln!("Failed changing mode: {}", err);
@@ -59,5 +76,5 @@ fn main() {
         }
     }
 
-    println!("Changed LEDs: {}", action);
+    println!("Performed action: {}", action);
 }
