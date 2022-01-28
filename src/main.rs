@@ -1,7 +1,7 @@
 mod magic_home;
 
 use clap::Parser;
-use magic_home::{Actions, MagicHomeAPI, Status};
+use magic_home::{Actions, MagicHomeAPI};
 use std::process;
 
 #[derive(Parser)]
@@ -17,19 +17,6 @@ struct Args {
 
     #[clap(subcommand)]
     action: Actions,
-}
-
-fn print_status(status: Status) {
-    if status.power {
-        println!("Power: on");
-    } else {
-        println!("Power: off");
-    }
-    println!("Color: {:?}", status.color);
-    println!("Mode: {}", status.mode);
-    if let Some(speed) = status.speed {
-        println!("Speed: {}", speed);
-    }
 }
 
 fn main() {
@@ -53,7 +40,7 @@ fn main() {
     });
 
     if let Some(s) = status {
-        print_status(s);
+        println!("{s}");
     }
 
     println!("Performed action: {:?}", action);

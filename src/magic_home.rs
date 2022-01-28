@@ -1,6 +1,7 @@
 use clap::Subcommand;
 
 use std::error::Error;
+use std::fmt;
 use std::io::prelude::*;
 use std::net::TcpStream;
 
@@ -61,10 +62,10 @@ pub enum Actions {
 }
 
 pub struct Status<'a> {
-    pub power: bool,
-    pub color: (u8, u8, u8),
-    pub mode: &'a str,
-    pub speed: Option<u8>,
+    power: bool,
+    color: (u8, u8, u8),
+    mode: &'a str,
+    speed: Option<u8>,
 }
 
 impl From<&[u8; 14]> for Status<'_> {
@@ -89,6 +90,25 @@ impl From<&[u8; 14]> for Status<'_> {
             mode,
             speed,
         }
+    }
+}
+
+impl fmt::Display for Status<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut string = String::new();
+
+        if self.power {
+            string.push_str("Power: on\n");
+        } else {
+            string.push_str("Power: off\n");
+        }
+        string.push_str(&format!("Color: {:?}\n", self.color));
+        string.push_str(&format!("Mode: {}\n", self.mode));
+        if let Some(speed) = self.speed {
+            string.push_str(&format!("Speed: {}\n", speed));
+        }
+
+        write!(f, "{}", string)
     }
 }
 
