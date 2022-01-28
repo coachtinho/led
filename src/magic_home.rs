@@ -1,3 +1,5 @@
+use clap::Subcommand;
+
 use std::error::Error;
 use std::io::prelude::*;
 use std::net::TcpStream;
@@ -5,6 +7,57 @@ use std::net::TcpStream;
 enum Mode {
     Color(u8, u8, u8),
     Function(u8, u8),
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Actions {
+    /// Get status of device
+    Status,
+
+    /// Turn on device
+    On,
+
+    /// Turn off device
+    Off,
+
+    /// Red strobe
+    Chaos,
+
+    /// Fast cycle
+    Rainbow,
+
+    /// Slow cycle
+    Ambient,
+
+    /// Red static
+    Red,
+
+    /// Green static
+    Green,
+
+    /// Blue static
+    Blue,
+
+    /// Yellow static
+    Yellow,
+
+    /// Orange static
+    Orange,
+
+    /// Lime static
+    Lime,
+
+    /// Purple static
+    Purple,
+
+    /// Pink static
+    Pink,
+
+    /// Cyan static
+    Cyan,
+
+    /// White static
+    White,
 }
 
 pub struct Status<'a> {
@@ -53,7 +106,7 @@ impl MagicHomeAPI {
     }
 
     /// Sets color of device according to RGB values
-    #[allow(dead_code)]
+    #[allow(dead_code, unused_must_use)]
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
         if !(0..=255).contains(&r) {
             Err("Invalid r value")
@@ -69,43 +122,80 @@ impl MagicHomeAPI {
         }
     }
 
-    /// Converts string to RGB values
-    fn string_to_rgb(color: &str) -> Result<Mode, &'static str> {
-        match color {
-            "red" => Ok(Mode::Color(255, 0, 0)),
-            "green" => Ok(Mode::Color(0, 255, 0)),
-            "blue" => Ok(Mode::Color(0, 0, 255)),
-            "lime" => Ok(Mode::Color(255, 255, 0)),
-            "yellow" => Ok(Mode::Color(255, 110, 0)),
-            "pink" => Ok(Mode::Color(255, 0, 170)),
-            "cyan" => Ok(Mode::Color(0, 255, 255)),
-            "purple" => Ok(Mode::Color(170, 0, 255)),
-            "orange" => Ok(Mode::Color(255, 24, 0)),
-            "white" => Ok(Mode::Color(255, 255, 255)),
-            _ => Err("Invalid color"),
+    /// Changes mode of device to one of the preset functions or colors or gets status of device
+    pub fn perform_action(&mut self, action: &Actions) -> Result<Option<Status>, Box<dyn Error>> {
+        match action {
+            Actions::Status => Ok(Some(self.get_status()?)),
+            Actions::On => {
+                self.turn_on()?;
+                Ok(None)
+            }
+            Actions::Off => {
+                self.turn_off()?;
+                Ok(None)
+            }
+            Actions::Chaos => {
+                self.send_to_device(Mode::Function(49, 5))?;
+                Ok(None)
+            }
+            Actions::Ambient => {
+                self.send_to_device(Mode::Function(37, 50))?;
+                Ok(None)
+            }
+            Actions::Rainbow => {
+                self.send_to_device(Mode::Function(37, 1))?;
+                Ok(None)
+            }
+            Actions::Red => {
+                self.send_to_device(Mode::Color(255, 0, 0))?;
+                Ok(None)
+            }
+            Actions::Green => {
+                self.send_to_device(Mode::Color(0, 255, 0))?;
+                Ok(None)
+            }
+            Actions::Blue => {
+                self.send_to_device(Mode::Color(0, 0, 255))?;
+                Ok(None)
+            }
+            Actions::Lime => {
+                self.send_to_device(Mode::Color(255, 255, 0))?;
+                Ok(None)
+            }
+            Actions::Yellow => {
+                self.send_to_device(Mode::Color(255, 110, 0))?;
+                Ok(None)
+            }
+            Actions::Pink => {
+                self.send_to_device(Mode::Color(255, 0, 170))?;
+                Ok(None)
+            }
+            Actions::Cyan => {
+                self.send_to_device(Mode::Color(0, 255, 255))?;
+                Ok(None)
+            }
+            Actions::Purple => {
+                self.send_to_device(Mode::Color(170, 0, 255))?;
+                Ok(None)
+            }
+            Actions::Orange => {
+                self.send_to_device(Mode::Color(255, 24, 0))?;
+                Ok(None)
+            }
+            Actions::White => {
+                self.send_to_device(Mode::Color(255, 255, 255))?;
+                Ok(None)
+            }
         }
     }
 
-    /// Changes mode of device to one of the preset functions or colors
-    pub fn set_mode(&mut self, mode: &str) -> Result<(), &'static str> {
-        let mode = match mode {
-            "chaos" => Mode::Function(49, 5),
-            "ambient" => Mode::Function(37, 50),
-            "rainbow" => Mode::Function(37, 1),
-            _ => MagicHomeAPI::string_to_rgb(mode)?,
-        };
-        self.send_to_device(mode);
-
-        Ok(())
-    }
-
-    fn send_to_device(&mut self, mode: Mode) {
+    fn send_to_device(&mut self, mode: Mode) -> Result<(), Box<dyn Error>> {
         let mut message = match mode {
             Mode::Color(r, g, b) => vec![0x31, r, b, g, 0xff, 0x00, 0x0f],
             Mode::Function(preset, speed) => {
                 // Preset functions don't turn on the device
                 // by default so it mus be done manually
-                self.turn_on();
+                self.turn_on()?;
                 vec![0x61, preset, speed, 0x0f]
             }
         };
@@ -113,9 +203,9 @@ impl MagicHomeAPI {
 
         message.push(checksum);
 
-        self.0
-            .write_all(message.as_slice())
-            .expect("Failed writing to socket");
+        self.0.write_all(message.as_slice())?;
+
+        Ok(())
     }
 
     fn calc_checksum(bytes: &[u8]) -> u8 {
@@ -128,30 +218,26 @@ impl MagicHomeAPI {
         checksum
     }
 
-    pub fn turn_on(&mut self) {
-        self.0
-            .write_all(&[0x71, 0x23, 0x0f, 0xa3])
-            .expect("Failed writing to socket");
+    pub fn turn_on(&mut self) -> Result<(), Box<dyn Error>> {
+        self.0.write_all(&[0x71, 0x23, 0x0f, 0xa3])?;
+
+        Ok(())
     }
 
-    pub fn turn_off(&mut self) {
-        self.0
-            .write_all(&[0x71, 0x24, 0x0f, 0xa4])
-            .expect("Failed writing to socket");
+    pub fn turn_off(&mut self) -> Result<(), Box<dyn Error>> {
+        self.0.write_all(&[0x71, 0x24, 0x0f, 0xa4])?;
+
+        Ok(())
     }
 
-    pub fn get_status(&mut self) -> Status {
+    pub fn get_status(&mut self) -> Result<Status, Box<dyn Error>> {
         let mut buffer: [u8; 14] = [0; 14];
 
-        self.0
-            .write_all(&[0x81, 0x8a, 0x8b, 0x96])
-            .expect("Failed writing to socket");
+        self.0.write_all(&[0x81, 0x8a, 0x8b, 0x96])?;
 
-        self.0
-            .read_exact(&mut buffer)
-            .expect("Failed reading from socket");
+        self.0.read_exact(&mut buffer)?;
 
-        Status::from(&buffer)
+        Ok(Status::from(&buffer))
     }
 }
 
@@ -178,26 +264,6 @@ mod tests {
     fn bad_url() {
         let api = MagicHomeAPI::new("badurl", None);
         assert!(!api.is_ok());
-    }
-
-    #[test]
-    fn valid_string_to_rgb() {
-        if let Ok(Mode::Color(r, g, b)) = MagicHomeAPI::string_to_rgb("yellow") {
-            assert_eq!(r, 255);
-            assert_eq!(g, 110);
-            assert_eq!(b, 0);
-        } else {
-            panic!("Returned Err");
-        }
-    }
-
-    #[test]
-    fn invalid_string_to_rgb() {
-        if let Err(error) = MagicHomeAPI::string_to_rgb("black") {
-            assert_eq!(error, "Invalid color");
-        } else {
-            panic!("Did not return Err");
-        }
     }
 
     #[test]
@@ -228,16 +294,8 @@ mod tests {
     fn valid_set_mode() {
         let _a = TcpListener::bind("127.0.0.1:9995").unwrap();
         let mut api = MagicHomeAPI::new("127.0.0.1", Some("9995")).unwrap();
-        let result = api.set_mode("chaos");
-        assert_eq!(result, Ok(()));
-    }
-
-    #[test]
-    fn invalid_set_mode() {
-        let _a = TcpListener::bind("127.0.0.1:9994").unwrap();
-        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9994")).unwrap();
-        let result = api.set_mode("reed");
-        assert_eq!(result, Err("Invalid color"));
+        let result = api.perform_action(&Actions::Chaos).unwrap();
+        assert!(result.is_none());
     }
 
     #[test]
