@@ -103,9 +103,9 @@ impl fmt::Display for Status<'_> {
             string.push_str("Power: off\n");
         }
         string.push_str(&format!("Color: {:?}\n", self.color));
-        string.push_str(&format!("Mode: {}\n", self.mode));
+        string.push_str(&format!("Mode: {}", self.mode));
         if let Some(speed) = self.speed {
-            string.push_str(&format!("Speed: {}\n", speed));
+            string.push_str(&format!("\nSpeed: {}", speed));
         }
 
         write!(f, "{}", string)
