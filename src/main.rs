@@ -1,7 +1,5 @@
-mod magic_home;
-
 use clap::Parser;
-use magic_home::{Actions, MagicHomeAPI};
+use led::magic_home::{Actions, MagicHomeAPI};
 use std::process;
 
 #[derive(Parser)]

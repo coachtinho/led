@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn good_url_no_port() {
-        let _a = TcpListener::bind("127.0.0.1:5577").unwrap();
+        let _a = TcpListener::bind("127.0.0.1:9998").unwrap();
         let api = MagicHomeAPI::new("127.0.0.1", None);
         assert!(api.is_ok());
     }
@@ -288,32 +288,32 @@ mod tests {
 
     #[test]
     fn valid_set_rgb() {
-        let _a = TcpListener::bind("127.0.0.1:9998").unwrap();
-        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9998")).unwrap();
+        let _a = TcpListener::bind("127.0.0.1:9997").unwrap();
+        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9997")).unwrap();
         let result = api.set_rgb(255, 1, 0);
         assert_eq!(result, Ok(()));
     }
 
     #[test]
     fn invalid_set_rgb_neg() {
-        let _a = TcpListener::bind("127.0.0.1:9997").unwrap();
-        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9997")).unwrap();
+        let _a = TcpListener::bind("127.0.0.1:9996").unwrap();
+        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9996")).unwrap();
         let result = api.set_rgb(255, -1, 0);
         assert_eq!(result, Err("Invalid g value"));
     }
 
     #[test]
     fn invalid_set_rgb_upper() {
-        let _a = TcpListener::bind("127.0.0.1:9996").unwrap();
-        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9996")).unwrap();
+        let _a = TcpListener::bind("127.0.0.1:9995").unwrap();
+        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9995")).unwrap();
         let result = api.set_rgb(255, 0, 300);
         assert_eq!(result, Err("Invalid b value"));
     }
 
     #[test]
     fn valid_set_mode() {
-        let _a = TcpListener::bind("127.0.0.1:9995").unwrap();
-        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9995")).unwrap();
+        let _a = TcpListener::bind("127.0.0.1:9994").unwrap();
+        let mut api = MagicHomeAPI::new("127.0.0.1", Some("9994")).unwrap();
         let result = api.perform_action(&Actions::Chaos).unwrap();
         assert!(result.is_none());
     }
