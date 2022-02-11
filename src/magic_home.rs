@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn good_url_no_port() {
-        let _a = TcpListener::bind("127.0.0.1:9998").unwrap();
+        let _a = TcpListener::bind("127.0.0.1:5577").unwrap();
         let api = MagicHomeAPI::new("127.0.0.1", None);
         assert!(api.is_ok());
     }
