@@ -16,19 +16,26 @@ image: "rust:latest"
 before_script:
     - apt-get update -yqq
     - apt-get install -yqq --no-install-recommends build-essential
-    - rustup component add clippy
 
 
 # Use cargo to build the project
 build:
+  stage: build
   script:
     - cargo build
+  artifacts:
+    paths:
+      - target
 
 lint:
+  stage: build
+  before_script:
+    - rustup component add clippy
   script:
     - cargo clippy
 
 test:
+  stage: test
   script:
     - cargo test
 
