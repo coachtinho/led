@@ -20,7 +20,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actons/checkout@v3
+      - uses: actions/checkout@v3
       - name: Add clippy
         run: rustup component add clippy
       - name: Lint
