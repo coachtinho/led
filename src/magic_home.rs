@@ -5,9 +5,35 @@ use std::fmt;
 use std::io::prelude::*;
 use std::net::TcpStream;
 
-enum Mode {
-    Color(u8, u8, u8),
-    Function(u8, u8),
+type Control = (u8, u8, u8);
+type Function = (u8, u8);
+type Rgb = (u8, u8, u8);
+
+// Constants
+// Control
+const STATUS: Control = (0x81, 0x8a, 0x8b);
+const ON: Control = (0x71, 0x23, 0x0f);
+const OFF: Control = (0x71, 0x24, 0x0f);
+// Functions
+const CHAOS: Function = (49, 5);
+const AMBIENT: Function = (37, 50);
+const RAINBOW: Function = (37, 1);
+// Colors
+const RED: Rgb = (255, 0, 0);
+const GREEN: Rgb = (0, 255, 0);
+const BLUE: Rgb = (0, 0, 255);
+const LIME: Rgb = (255, 255, 0);
+const YELLOW: Rgb = (255, 110, 0);
+const PINK: Rgb = (255, 0, 170);
+const CYAN: Rgb = (0, 255, 255);
+const PURPLE: Rgb = (170, 0, 255);
+const ORANGE: Rgb = (255, 24, 0);
+const WHITE: Rgb = (255, 255, 255);
+
+enum Message {
+    Control(Control),
+    Function(Function),
+    Color(Rgb),
 }
 
 #[derive(Subcommand, Debug)]
@@ -61,14 +87,14 @@ pub enum Actions {
     White,
 }
 
-pub struct Status<'a> {
+pub struct Status {
     power: bool,
-    color: (u8, u8, u8),
-    mode: &'a str,
+    color: Rgb,
+    mode: &'static str,
     speed: Option<u8>,
 }
 
-impl From<&[u8; 14]> for Status<'_> {
+impl From<&[u8; 14]> for Status {
     fn from(buffer: &[u8; 14]) -> Self {
         // Parse power
         let power = buffer[2] == 35;
@@ -93,7 +119,7 @@ impl From<&[u8; 14]> for Status<'_> {
     }
 }
 
-impl fmt::Display for Status<'_> {
+impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut string = String::new();
 
@@ -125,7 +151,7 @@ impl MagicHomeAPI {
         Ok(MagicHomeAPI(stream))
     }
 
-    /// Sets color of device according to RGB values
+    /// Sets color of device according to Rgb values
     #[allow(dead_code, unused_must_use)]
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
         if !(0..=255).contains(&r) {
@@ -135,8 +161,8 @@ impl MagicHomeAPI {
         } else if !(0..=255).contains(&b) {
             Err("Invalid b value")
         } else {
-            let mode = Mode::Color(r as u8, g as u8, b as u8);
-            self.send_to_device(mode);
+            let message = Message::Color((r as u8, g as u8, b as u8));
+            self.send_to_device(message);
 
             Ok(())
         }
@@ -144,88 +170,55 @@ impl MagicHomeAPI {
 
     /// Changes mode of device to one of the preset functions or colors or gets status of device
     pub fn perform_action(&mut self, action: &Actions) -> Result<Option<Status>, Box<dyn Error>> {
-        match action {
-            Actions::Status => Ok(Some(self.get_status()?)),
-            Actions::On => {
-                self.turn_on()?;
-                Ok(None)
-            }
-            Actions::Off => {
-                self.turn_off()?;
-                Ok(None)
-            }
-            Actions::Chaos => {
-                self.send_to_device(Mode::Function(49, 5))?;
-                Ok(None)
-            }
-            Actions::Ambient => {
-                self.send_to_device(Mode::Function(37, 50))?;
-                Ok(None)
-            }
-            Actions::Rainbow => {
-                self.send_to_device(Mode::Function(37, 1))?;
-                Ok(None)
-            }
-            Actions::Red => {
-                self.send_to_device(Mode::Color(255, 0, 0))?;
-                Ok(None)
-            }
-            Actions::Green => {
-                self.send_to_device(Mode::Color(0, 255, 0))?;
-                Ok(None)
-            }
-            Actions::Blue => {
-                self.send_to_device(Mode::Color(0, 0, 255))?;
-                Ok(None)
-            }
-            Actions::Lime => {
-                self.send_to_device(Mode::Color(255, 255, 0))?;
-                Ok(None)
-            }
-            Actions::Yellow => {
-                self.send_to_device(Mode::Color(255, 110, 0))?;
-                Ok(None)
-            }
-            Actions::Pink => {
-                self.send_to_device(Mode::Color(255, 0, 170))?;
-                Ok(None)
-            }
-            Actions::Cyan => {
-                self.send_to_device(Mode::Color(0, 255, 255))?;
-                Ok(None)
-            }
-            Actions::Purple => {
-                self.send_to_device(Mode::Color(170, 0, 255))?;
-                Ok(None)
-            }
-            Actions::Orange => {
-                self.send_to_device(Mode::Color(255, 24, 0))?;
-                Ok(None)
-            }
-            Actions::White => {
-                self.send_to_device(Mode::Color(255, 255, 255))?;
-                Ok(None)
-            }
-        }
+        let message = match action {
+            Actions::Status => Message::Control(STATUS),
+            Actions::On => Message::Control(ON),
+            Actions::Off => Message::Control(OFF),
+            Actions::Chaos => Message::Function(CHAOS),
+            Actions::Ambient => Message::Function(AMBIENT),
+            Actions::Rainbow => Message::Function(RAINBOW),
+            Actions::Red => Message::Color(RED),
+            Actions::Green => Message::Color(GREEN),
+            Actions::Blue => Message::Color(BLUE),
+            Actions::Lime => Message::Color(LIME),
+            Actions::Yellow => Message::Color(YELLOW),
+            Actions::Pink => Message::Color(PINK),
+            Actions::Cyan => Message::Color(CYAN),
+            Actions::Purple => Message::Color(PURPLE),
+            Actions::Orange => Message::Color(ORANGE),
+            Actions::White => Message::Color(WHITE),
+        };
+
+        self.send_to_device(message)
     }
 
-    fn send_to_device(&mut self, mode: Mode) -> Result<(), Box<dyn Error>> {
-        let mut message = match mode {
-            Mode::Color(r, g, b) => vec![0x31, r, b, g, 0xff, 0x00, 0x0f],
-            Mode::Function(preset, speed) => {
+    fn send_to_device(&mut self, message: Message) -> Result<Option<Status>, Box<dyn Error>> {
+        let mut bytes = match message {
+            Message::Color((r, g, b)) => vec![0x31, r, b, g, 0xff, 0x00, 0x0f],
+            Message::Function((preset, speed)) => {
                 // Preset functions don't turn on the device
                 // by default so it mus be done manually
-                self.turn_on()?;
+                self.send_to_device(Message::Control(ON))?;
                 vec![0x61, preset, speed, 0x0f]
             }
+            Message::Control((b1, b2, b3)) => vec![b1, b2, b3],
         };
-        let checksum = MagicHomeAPI::calc_checksum(message.as_slice());
+        let checksum = MagicHomeAPI::calc_checksum(bytes.as_slice());
 
-        message.push(checksum);
+        bytes.push(checksum);
 
-        self.0.write_all(message.as_slice())?;
+        self.0.write_all(bytes.as_slice())?;
 
-        Ok(())
+        // Receive status
+        if let Message::Control(STATUS) = message {
+            let mut buffer: [u8; 14] = [0; 14];
+
+            self.0.read_exact(&mut buffer)?;
+
+            Ok(Some(Status::from(&buffer)))
+        } else {
+            Ok(None)
+        }
     }
 
     fn calc_checksum(bytes: &[u8]) -> u8 {
@@ -236,28 +229,6 @@ impl MagicHomeAPI {
         }
 
         checksum
-    }
-
-    pub fn turn_on(&mut self) -> Result<(), Box<dyn Error>> {
-        self.0.write_all(&[0x71, 0x23, 0x0f, 0xa3])?;
-
-        Ok(())
-    }
-
-    pub fn turn_off(&mut self) -> Result<(), Box<dyn Error>> {
-        self.0.write_all(&[0x71, 0x24, 0x0f, 0xa4])?;
-
-        Ok(())
-    }
-
-    pub fn get_status(&mut self) -> Result<Status, Box<dyn Error>> {
-        let mut buffer: [u8; 14] = [0; 14];
-
-        self.0.write_all(&[0x81, 0x8a, 0x8b, 0x96])?;
-
-        self.0.read_exact(&mut buffer)?;
-
-        Ok(Status::from(&buffer))
     }
 }
 
