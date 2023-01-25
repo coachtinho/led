@@ -96,6 +96,9 @@ jobs:
       - name: Setup | Artifacts
         uses: actions/download-artifact@v3
 
+      - name: Setup | Checksums
+        run: for file in led-*/led-*; do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256"; done
+
       - name: Setup | Publish Release
         run: gh release edit ${{ needs.release_please.outputs.tag_name }} --draft=false --repo=${{ github.repository }}
         env:
@@ -104,5 +107,5 @@ jobs:
       - name: Build | Add Artifacts to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: led-*
+          files: led-*/led-*
           tag_name: ${{ needs.release_please.outputs.tag_name }}
