@@ -1,6 +1,6 @@
 # led
 
-![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/coachtinho/led/build.yml?branch=master&style=for-the-badge)
+[![GitHub Workflow Status (with branch)](https://img.shields.io/github/actions/workflow/status/coachtinho/led/build.yml?branch=master&style=for-the-badge)](https://github.com/coachtinho/led/actions/workflows/build.yml)
 
 Simple rust program to control MagicHome RGB controllers.
 
