@@ -30,6 +30,8 @@ const PURPLE: Rgb = (170, 0, 255);
 const ORANGE: Rgb = (255, 24, 0);
 const WHITE: Rgb = (255, 255, 255);
 
+const DEFAULT_PORT: &str = "5577";
+
 enum Message {
     Control(Control),
     Function(Function),
@@ -144,7 +146,7 @@ impl MagicHomeAPI {
     /// Creates api from device address
     /// If no port is provided defaults to 5577
     pub fn new(address: &str, port: Option<&str>) -> Result<MagicHomeAPI, Box<dyn Error>> {
-        let port = port.unwrap_or("5577");
+        let port = port.unwrap_or(DEFAULT_PORT);
         let address = &format!("{}:{}", address, port);
         let stream = TcpStream::connect(address)?;
 
