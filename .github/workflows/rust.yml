@@ -43,10 +43,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions-rs/cargo@v1
+          components: clippy
+      - uses: actions-rs/clippy-check@v1
         with:
-          command: clippy
-          args: -- -Dwarnings
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features -- -Dwarnings
     
   test:
     runs-on: ubuntu-latest

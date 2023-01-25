@@ -156,7 +156,8 @@ impl MagicHomeAPI {
     pub fn set_rgb(&mut self, r: isize, g: isize, b: isize) -> Result<(), &'static str> {
         if !(0..=255).contains(&r) {
             Err("Invalid r value")
-        } else if !(0..=255).contains(&g) {
+        //} else if !(0..=255).contains(&g) {
+        } else if 0 <= g && g <= 255 {
             Err("Invalid g value")
         } else if !(0..=255).contains(&b) {
             Err("Invalid b value")
