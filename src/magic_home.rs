@@ -31,6 +31,7 @@ const ORANGE: Rgb = (255, 24, 0);
 const WHITE: Rgb = (255, 255, 255);
 
 const DEFAULT_PORT: &str = "5577";
+const STATUS_BUFFER_SIZE: usize = 14;
 
 enum Message {
     Control(Control),
@@ -97,18 +98,21 @@ pub struct Status {
 }
 
 impl From<&[u8; 14]> for Status {
-    fn from(buffer: &[u8; 14]) -> Self {
+    fn from(buffer: &[u8; STATUS_BUFFER_SIZE]) -> Self {
+        // Destructure status buffer
+        let [_, _, power, mode, _, speed, r, b, g, ..] = buffer;
+
         // Parse power
-        let power = buffer[2] == 35;
+        let power = *power == 35;
 
         // Parse color
-        let color = (buffer[6], buffer[8], buffer[7]);
+        let color = (*r, *g, *b);
 
         // Parse mode
-        let (mode, speed) = match buffer[3] {
+        let (mode, speed) = match mode {
             97 => ("static", None),
-            49 => ("strobe", Some(100 - buffer[5])),
-            37 => ("cycle", Some(100 - buffer[5])),
+            49 => ("strobe", Some(100 - speed)),
+            37 => ("cycle", Some(100 - speed)),
             _ => ("unknown", None),
         };
 
@@ -213,7 +217,7 @@ impl MagicHomeAPI {
 
         // Receive status
         if let Message::Control(STATUS) = message {
-            let mut buffer: [u8; 14] = [0; 14];
+            let mut buffer: [u8; STATUS_BUFFER_SIZE] = [0; STATUS_BUFFER_SIZE];
 
             self.0.read_exact(&mut buffer)?;
 
