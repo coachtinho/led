@@ -7,4 +7,4 @@ description = "Remotely send commands to RGB controller"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.0.13", features = ["derive"] }
+clap = { version = "4.3", features = ["derive"] }
