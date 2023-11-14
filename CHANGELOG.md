@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/coachtinho/led/compare/v0.1.1...v0.1.2) (2023-11-14)
+
+
+### Bug Fixes
+
+* updated clap to v4 ([#9](https://github.com/coachtinho/led/issues/9)) ([a4bceeb](https://github.com/coachtinho/led/commit/a4bceeb47c6de715e85f23b2aebf21b65eee7cba))
+
 ## [0.1.1](https://github.com/coachtinho/led/compare/v0.1.0...v0.1.1) (2023-01-25)
 
 
