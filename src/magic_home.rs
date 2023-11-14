@@ -90,6 +90,7 @@ pub enum Actions {
     White,
 }
 
+/// Object representing the status of the LED
 pub struct Status {
     power: bool,
     color: Rgb,
@@ -98,6 +99,7 @@ pub struct Status {
 }
 
 impl From<&[u8; 14]> for Status {
+    /// Constructs Status object from byte sequence returned by device
     fn from(buffer: &[u8; STATUS_BUFFER_SIZE]) -> Self {
         // Destructure status buffer
         let [_, _, power, mode, _, speed, r, b, g, ..] = buffer;
@@ -126,6 +128,7 @@ impl From<&[u8; 14]> for Status {
 }
 
 impl fmt::Display for Status {
+    /// Formats status object into readable text
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut string = String::new();
 
